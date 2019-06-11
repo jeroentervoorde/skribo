@@ -7,7 +7,7 @@ use harfbuzz::sys::{
     hb_buffer_get_glyph_positions, hb_face_create, hb_face_destroy, hb_face_reference, hb_face_t,
     hb_font_create, hb_font_destroy, hb_position_t, hb_shape,
 };
-use harfbuzz::sys::{HB_SCRIPT_DEVANAGARI};
+use harfbuzz::sys::{HB_SCRIPT_LATIN};
 use harfbuzz::{Blob, Buffer, Direction, Language};
 
 use crate::unicode_funcs::install_unicode_funcs;
@@ -53,7 +53,7 @@ pub fn layout_run(style: &TextStyle, font: &FontRef, text: &str) -> Layout {
     b.add_str(text);
     b.set_direction(Direction::LTR);
     // TODO: set this based on detected script
-    b.set_script(HB_SCRIPT_DEVANAGARI);
+    b.set_script(HB_SCRIPT_LATIN);
     b.set_language(Language::from_string("en_US"));
     let hb_face = HbFace::new(font);
     unsafe {
