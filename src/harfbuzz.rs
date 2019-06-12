@@ -13,6 +13,8 @@ use harfbuzz::{Blob, Buffer, Direction, Language};
 use crate::unicode_funcs::install_unicode_funcs;
 use crate::{FontRef};
 use crate::{Glyph, Layout, TextStyle};
+use harfbuzz_sys::HB_SCRIPT_DEVANAGARI;
+use harfbuzz_sys::hb_ot_font_set_funcs;
 
 struct HbFace {
     hb_face: *mut hb_face_t,
@@ -51,6 +53,9 @@ pub fn layout_run(style: &TextStyle, font: &FontRef, text: &str) -> Layout {
     let mut b = Buffer::new();
     install_unicode_funcs(&mut b);
     b.add_str(text);
+
+    println!("text: {}",text);
+
     b.set_direction(Direction::LTR);
     // TODO: set this based on detected script
     b.set_script(HB_SCRIPT_LATIN);
@@ -58,11 +63,12 @@ pub fn layout_run(style: &TextStyle, font: &FontRef, text: &str) -> Layout {
     let hb_face = HbFace::new(font);
     unsafe {
         let hb_font = hb_font_create(hb_face.hb_face);
+        hb_ot_font_set_funcs(hb_font);
         hb_shape(hb_font, b.as_ptr(), std::ptr::null(), 0);
         hb_font_destroy(hb_font);
         let mut n_glyph = 0;
         let glyph_infos = hb_buffer_get_glyph_infos(b.as_ptr(), &mut n_glyph);
-        debug!("number of glyphs: {}", n_glyph);
+        println!("number of glyphs: {}", n_glyph);
         let glyph_infos = std::slice::from_raw_parts(glyph_infos, n_glyph as usize);
         let mut n_glyph_pos = 0;
         let glyph_positions = hb_buffer_get_glyph_positions(b.as_ptr(), &mut n_glyph_pos);
@@ -71,7 +77,7 @@ pub fn layout_run(style: &TextStyle, font: &FontRef, text: &str) -> Layout {
         let mut glyphs = Vec::new();
         let scale = style.size / (font.font.metrics().units_per_em as f32);
         for (glyph, pos) in glyph_infos.iter().zip(glyph_positions.iter()) {
-            debug!("{:?} {:?}", glyph, pos);
+            println!("{:?} POS: {:?}", glyph, pos);
             let adv = Vector2D::new(pos.x_advance, pos.y_advance);
             let adv_f = adv.to_f32() * scale;
             let offset = Vector2D::new(pos.x_offset, pos.y_offset).to_f32() * scale;
